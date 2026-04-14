@@ -2,26 +2,12 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const { db, getUseDb } = require("../config/db");
-const { createAssessment } = require("../utils/recaptcha");
 
 const register = async (req, res) => {
     try {
-        const { email, password, role, name, recaptchaToken } = req.body;
+        const { email, password, role, name } = req.body;
         if (!email || !password) {
             return res.status(400).json({ message: "Email and password are required" });
-        }
-
-        if (!recaptchaToken) {
-            return res.status(400).json({ message: "Security validation is required" });
-        }
-
-        const score = await createAssessment({
-            token: recaptchaToken,
-            recaptchaAction: "SIGNUP",
-        });
-
-        if (score === null || score < 0.5) {
-            return res.status(400).json({ message: "Security validation failed. Please try again." });
         }
 
         const hashed = await bcrypt.hash(password, 10);
@@ -51,20 +37,7 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
-    const { email, password, recaptchaToken } = req.body;
-
-    if (!recaptchaToken) {
-        return res.status(400).json({ message: "Security validation is required" });
-    }
-
-    const score = await createAssessment({
-        token: recaptchaToken,
-        recaptchaAction: "LOGIN",
-    });
-
-    if (score === null || score < 0.5) {
-        return res.status(400).json({ message: "Security validation failed. Please try again." });
-    }
+    const { email, password } = req.body;
 
     const useDb = getUseDb();
     if (!useDb) {
