@@ -33,6 +33,7 @@ async function createAssessment({
         });
 
         const data = response.data;
+        console.log("reCAPTCHA Assessment: Full Response Data:", JSON.stringify(data, null, 2));
 
         // Check if the token is valid.
         if (!data.tokenProperties.valid) {
