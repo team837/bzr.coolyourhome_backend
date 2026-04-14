@@ -2,6 +2,7 @@ const { OAuth2Client } = require("google-auth-library");
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const { db, getUseDb } = require("../config/db");
+const { createAssessment } = require("../utils/recaptcha");
 
 const handleUserLoginOrRegister = (userData, res) => {
     const { googleId, email, name, picture } = userData;
@@ -106,17 +107,21 @@ const googleLogin = async (req, res) => {
         }
 
         if (!recaptchaToken) {
-            console.error("Google Login: reCAPTCHA Token is missing");
-            return res.status(400).json({ message: "Please complete the reCAPTCHA to proceed" });
+            console.error("Google Login: Security validation is missing");
+            return res.status(400).json({ message: "Security validation is required" });
         }
 
-        const recaptchaVerify = await axios.post(`https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`);
-        if (!recaptchaVerify.data.success) {
-            console.error("Google Login: reCAPTCHA verification failed");
-            return res.status(400).json({ message: "reCAPTCHA verification failed. Please try again." });
+        const score = await createAssessment({
+            token: recaptchaToken,
+            recaptchaAction: "GOOGLE_LOGIN",
+        });
+
+        if (score === null || score < 0.5) {
+            console.error("Google Login: Security validation failed");
+            return res.status(400).json({ message: "Security validation failed. Please try again." });
         }
 
-        console.log("Google Login: Verifying token...");
+        console.log("Google Login: Verifying id token...");
         const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
         const ticket = await client.verifyIdToken({
             idToken,

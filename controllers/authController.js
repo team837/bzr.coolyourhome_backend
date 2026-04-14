@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const { db, getUseDb } = require("../config/db");
+const { createAssessment } = require("../utils/recaptcha");
 
 const register = async (req, res) => {
     try {
@@ -11,12 +12,16 @@ const register = async (req, res) => {
         }
 
         if (!recaptchaToken) {
-            return res.status(400).json({ message: "Please complete the reCAPTCHA to proceed" });
+            return res.status(400).json({ message: "Security validation is required" });
         }
 
-        const recaptchaVerify = await axios.post(`https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`);
-        if (!recaptchaVerify.data.success) {
-            return res.status(400).json({ message: "reCAPTCHA verification failed. Please try again." });
+        const score = await createAssessment({
+            token: recaptchaToken,
+            recaptchaAction: "SIGNUP",
+        });
+
+        if (score === null || score < 0.5) {
+            return res.status(400).json({ message: "Security validation failed. Please try again." });
         }
 
         const hashed = await bcrypt.hash(password, 10);
@@ -45,10 +50,23 @@ const register = async (req, res) => {
     }
 };
 
-const login = (req, res) => {
-    const { email, password } = req.body;
-    const useDb = getUseDb();
+const login = async (req, res) => {
+    const { email, password, recaptchaToken } = req.body;
 
+    if (!recaptchaToken) {
+        return res.status(400).json({ message: "Security validation is required" });
+    }
+
+    const score = await createAssessment({
+        token: recaptchaToken,
+        recaptchaAction: "LOGIN",
+    });
+
+    if (score === null || score < 0.5) {
+        return res.status(400).json({ message: "Security validation failed. Please try again." });
+    }
+
+    const useDb = getUseDb();
     if (!useDb) {
         return res.json({
             token: "demo_token",
@@ -60,11 +78,6 @@ const login = (req, res) => {
         "SELECT id, email, password, role, fullname AS name, phone, alternate_phone FROM users WHERE email=?",
         [email],
         async (err, results) => {
-            if (err) {
-                console.error("Login DB Error:", err);
-                return res.status(500).json(err);
-            }
-
             if (results.length === 0)
                 return res.status(404).json({ message: "User not found" });
 

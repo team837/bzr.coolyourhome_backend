@@ -13,6 +13,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@google-cloud/recaptcha-enterprise": "^6.4.0",
     "@woocommerce/woocommerce-rest-api": "^1.0.2",
     "axios": "^1.13.6",
     "bcrypt": "^6.0.0",
