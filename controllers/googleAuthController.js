@@ -111,6 +111,8 @@ const googleLogin = async (req, res) => {
             return res.status(400).json({ message: "Security validation is required" });
         }
 
+        console.log(`Google Login: Received reCAPTCHA token (start): ${recaptchaToken.substring(0, 10)}...`);
+
         const score = await createAssessment({
             token: recaptchaToken,
             recaptchaAction: "GOOGLE_LOGIN",

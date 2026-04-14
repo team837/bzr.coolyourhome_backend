@@ -44,7 +44,7 @@ app.use("/images", express.static(path.join(__dirname, "../public/images")));
 
 // Set Cross-Origin-Opener-Policy for Google Auth
 app.use((req, res, next) => {
-   res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+   res.setHeader("Cross-Origin-Opener-Policy", "unsafe-none");
    next();
 });
 

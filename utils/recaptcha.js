@@ -34,24 +34,24 @@ async function createAssessment({
 
         // Check if the token is valid.
         if (!response.tokenProperties.valid) {
-            console.log(`The CreateAssessment call failed because the token was: ${response.tokenProperties.invalidReason}`);
+            console.error(`reCAPTCHA Assessment: Token is invalid. Reason: ${response.tokenProperties.invalidReason}`);
             return null;
         }
 
         // Check if the expected action was executed.
         if (response.tokenProperties.action === recaptchaAction) {
-            console.log(`The reCAPTCHA score is: ${response.riskAnalysis.score}`);
-            response.riskAnalysis.reasons.forEach((reason) => {
-                console.log("reCAPTCHA risk reason:", reason);
-            });
-
+            console.log(`reCAPTCHA Assessment: Success. Score: ${response.riskAnalysis.score}, Action: ${response.tokenProperties.action}`);
+            if (response.riskAnalysis.reasons && response.riskAnalysis.reasons.length > 0) {
+                console.log("reCAPTCHA Assessment: Risk reasons:", response.riskAnalysis.reasons);
+            }
             return response.riskAnalysis.score;
         } else {
-            console.log(`The action attribute in your reCAPTCHA tag (${response.tokenProperties.action}) does not match the action you are expecting to score (${recaptchaAction})`);
+            console.error(`reCAPTCHA Assessment: Action mismatch. Expected '${recaptchaAction}', but got '${response.tokenProperties.action}'`);
             return null;
         }
     } catch (err) {
-        console.error("reCAPTCHA Enterprise Error:", err);
+        console.error("reCAPTCHA Assessment: Critical Error calling Google Cloud API:");
+        console.error(err);
         return null;
     }
 }
