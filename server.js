@@ -10,6 +10,7 @@ const productRoutes = require("./routes/productRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const stripeRoutes = require("./routes/stripeRoutes");
 const btcpayRoutes = require("./routes/btcpayRoutes");
+const nowpaymentsRoutes = require("./routes/nowpaymentsRoutes");
 const wooRoutes = require("./routes/wooRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 
@@ -56,7 +57,8 @@ app.use("/api", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api", stripeRoutes);
-app.use("/api/btcpay", btcpayRoutes);
+// app.use("/api/btcpay", btcpayRoutes);
+app.use("/api/nowpayments", nowpaymentsRoutes);
 app.use("/api/wc", wooRoutes);
 app.use("/api/cart", cartRoutes);
 
@@ -88,6 +90,35 @@ app.post("/api/upload", upload.single("image"), (req, res) => {
    // The path accessible by frontend relative to public/
    const imageUrl = `/images/${brand}/${req.file.filename}`;
    res.json({ url: imageUrl, message: "File uploaded successfully" });
+});
+
+app.post("/create-invoice", async (req, res) => {
+   try {
+      const response = await fetch("https://api.nowpayments.io/v1/invoice", {
+         method: "POST",
+         headers: {
+            "x-api-key": "9XMXR71-ZCMMNTK-HYC1SW4-58FGBSR",
+            "Content-Type": "application/json"
+         },
+         body: JSON.stringify({
+            price_amount: 50,
+            price_currency: "usd",
+            order_id: "RGDBP-21314",
+            order_description: "Apple Macbook Pro 2019 x 1",
+            ipn_callback_url: "https://nowpayments.io",
+            success_url: "https://nowpayments.io/success",
+            cancel_url: "https://nowpayments.io/cancel"
+         })
+      });
+
+      const data = await response.json();
+
+      // send invoice_url to frontend
+      res.json({ invoice_url: data.invoice_url });
+
+   } catch (err) {
+      res.status(500).json({ error: err.message });
+   }
 });
 
 /* ===========================
