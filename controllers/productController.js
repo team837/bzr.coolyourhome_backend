@@ -75,7 +75,7 @@ const getProducts = (req, res) => {
 const updateProduct = (req, res) => {
     const { id } = req.params;
     const {
-        name, price, brand, category, originalPrice, discountedPrice,
+        name, brand, category, originalPrice, discountedPrice,
         rating, soldCount, tags, images, description, youtubeVideo,
         reviewImage, specs, reviews, condition, ebayDetails, image_url, stock
     } = req.body;
@@ -87,12 +87,12 @@ const updateProduct = (req, res) => {
 
     db.query(
         `UPDATE products SET 
-        name = ?, price = ?, brand = ?, category = ?, originalPrice = ?, discountedPrice = ?, 
+        name = ?, brand = ?, category = ?, originalPrice = ?, discountedPrice = ?, 
         rating = ?, soldCount = ?, tags = ?, images = ?, description = ?, youtubeVideo = ?, 
         reviewImage = ?, specs = ?, reviews = ?, \`condition\` = ?, ebayDetails = ?, image_url = ?, stock = ?
         WHERE id = ?`,
         [
-            name, price, brand, category, originalPrice, discountedPrice,
+            name, brand, category, originalPrice, discountedPrice,
             rating, soldCount, JSON.stringify(tags || []), JSON.stringify(images || []),
             description, youtubeVideo, reviewImage, JSON.stringify(specs || {}),
             JSON.stringify(reviews || []), condition, JSON.stringify(ebayDetails || {}),
