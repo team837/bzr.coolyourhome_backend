@@ -101,7 +101,7 @@ app.post("/create-invoice", async (req, res) => {
             "Content-Type": "application/json"
          },
          body: JSON.stringify({
-            price_amount: 50,
+            price_amount: 5,
             price_currency: "usd",
             order_id: "RGDBP-21314",
             order_description: "Apple Macbook Pro 2019 x 1",
