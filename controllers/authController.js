@@ -89,7 +89,7 @@ const getMe = (req, res) => {
             return res.json({ id: 1, email: "demo@bzr.com", role: "user", name: "Demo User" });
         }
 
-        db.query("SELECT id, email, role, fullname AS name, phone, alternate_phone FROM users WHERE id=?", [decoded.id], (err, results) => {
+        db.query("SELECT id, email, role, fullname AS name, phone, alternate_phone, balance FROM users WHERE id=?", [decoded.id], (err, results) => {
             if (err) {
                 console.error("GetMe DB Error:", err);
                 return res.status(500).json(err);
