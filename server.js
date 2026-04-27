@@ -101,8 +101,7 @@ app.post("/create-invoice", async (req, res) => {
 
 
       const { id, price_amount } = req.body;
-      console.log("price");
-      console.log(price_amount)
+
       const response = await fetch("https://api.nowpayments.io/v1/invoice", {
          method: "POST",
          headers: {
@@ -124,7 +123,7 @@ app.post("/create-invoice", async (req, res) => {
 
 
       const data = await response.json();
-      console.log(data.invoice_url);
+
       // send invoice_url to frontend
       res.json({ invoice_url: data.invoice_url });
 
