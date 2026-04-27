@@ -124,7 +124,7 @@ app.post("/create-invoice", async (req, res) => {
 
 
       const data = await response.json();
-
+      console.log(data.invoice_url);
       // send invoice_url to frontend
       res.json({ invoice_url: data.invoice_url });
 
