@@ -115,8 +115,8 @@ app.post("/create-invoice", async (req, res) => {
             order_id: id,
             order_description: "Apple Macbook Pro 2019 x 1",
             ipn_callback_url: "https://nowpayments.io",
-            success_url: process.env.BACKEND_URL + "/success?id=${id}&price=${price_amount}", // 👈 here
-            cancel_url: process.env.BACKEND_URL + "/cancel"
+            success_url: "https://bzr-coolyourhome-backend.onrender.com/success?id=" + id + "&price=" + price_amount,
+            cancel_url: "https://bzr-coolyourhome-backend.onrender.com/cancel"
          })
       });
 
