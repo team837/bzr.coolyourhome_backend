@@ -97,7 +97,7 @@ app.post("/create-invoice", async (req, res) => {
       const response = await fetch("https://api.nowpayments.io/v1/invoice", {
          method: "POST",
          headers: {
-            "x-api-key": "9XMXR71-ZCMMNTK-HYC1SW4-58FGBSR",
+            "x-api-key": process.env.NowPayments_API_Key,
             "Content-Type": "application/json"
          },
          body: JSON.stringify({
@@ -121,6 +121,90 @@ app.post("/create-invoice", async (req, res) => {
    }
 });
 
+// 27-04-2026
+const { db, getUseDb } = require("../config/db"); const { db, getUseDb } = require("../config/db"); app.post("/create-invoice", async (req, res) => {
+   try {
+
+
+      const { id, price_amount } = req.body;
+
+      const response = await fetch("https://api.nowpayments.io/v1/invoice", {
+         method: "POST",
+         headers: {
+            "x-api-key": process.env.NowPayments_API_Key,
+            "Content-Type": "application/json"
+         },
+         body: JSON.stringify({
+            price_amount: price_amount,
+            price_currency: "usd",
+            order_id: id,
+            order_description: "Apple Macbook Pro 2019 x 1",
+            ipn_callback_url: "https://nowpayments.io",
+            success_url: `${process.env.BACKEND_URL}/success?id=${id}&price=${price_amount}`, // 👈 here
+            cancel_url: `${process.env.BACKEND_URL}/cancel`
+         })
+      });
+
+
+
+
+      const data = await response.json();
+
+      // send invoice_url to frontend
+      res.json({ invoice_url: data.invoice_url });
+
+   } catch (err) {
+      res.status(500).json({ error: err.message });
+   }
+});
+
+
+
+api.get("/success", (req, res) => {
+   const { id, price } = req.query;
+
+   if (!id || !price) {
+      return res.status(400).json({ error: "Missing id or price" });
+   }
+
+   const userId = parseInt(id, 10);
+   const amount = parseFloat(price);
+
+   if (isNaN(userId) || isNaN(amount)) {
+      return res.status(400).json({ error: "Invalid id or price" });
+   }
+
+   db.query(
+      "UPDATE users SET balance = balance + ? WHERE id = ?",
+      [amount, userId],
+      (err) => {
+         if (err) {
+            console.error("BALANCE UPDATE ERROR:", err);
+            return res.status(500).json({ error: err.message });
+         }
+
+         // fetch updated user
+         db.query(
+            "SELECT id, fullname, email, balance FROM users WHERE id = ?",
+            [userId],
+            (err, results) => {
+               if (err) {
+                  return res.status(500).json({ error: err.message });
+               }
+
+               if (results.length === 0) {
+                  return res.status(404).json({ error: "User not found" });
+               }
+
+               res.json({
+                  message: "Balance updated successfully",
+                  user: results[0]
+               });
+            }
+         );
+      }
+   );
+});
 /* ===========================
    SERVER START
 =========================== */
