@@ -92,37 +92,11 @@ app.post("/api/upload", upload.single("image"), (req, res) => {
    res.json({ url: imageUrl, message: "File uploaded successfully" });
 });
 
-app.post("/create-invoice", async (req, res) => {
-   try {
-      const response = await fetch("https://api.nowpayments.io/v1/invoice", {
-         method: "POST",
-         headers: {
-            "x-api-key": process.env.NowPayments_API_Key,
-            "Content-Type": "application/json"
-         },
-         body: JSON.stringify({
-            price_amount: 12,
-            price_currency: "usd",
-            order_id: "RGDBP-21314",
-            order_description: "Apple Macbook Pro 2019 x 1",
-            ipn_callback_url: "https://nowpayments.io",
-            success_url: "https://nowpayments.io/success",
-            cancel_url: "https://nowpayments.io/cancel"
-         })
-      });
 
-      const data = await response.json();
-
-      // send invoice_url to frontend
-      res.json({ invoice_url: data.invoice_url });
-
-   } catch (err) {
-      res.status(500).json({ error: err.message });
-   }
-});
 
 // 27-04-2026
-const { db, getUseDb } = require("../config/db"); const { db, getUseDb } = require("../config/db"); app.post("/create-invoice", async (req, res) => {
+const { db, getUseDb } = require("../config/db");
+app.post("/create-invoice", async (req, res) => {
    try {
 
 
