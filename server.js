@@ -134,7 +134,7 @@ app.post("/create-invoice", async (req, res) => {
 
 
 
-api.get("/success", (req, res) => {
+app.get("/success", (req, res) => {
    const { id, price } = req.query;
 
    if (!id || !price) {
