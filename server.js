@@ -95,7 +95,7 @@ app.post("/api/upload", upload.single("image"), (req, res) => {
 
 
 // 27-04-2026
-const { db, getUseDb } = require("../config/db");
+const { db, getUseDb } = require("./config/db");
 app.post("/create-invoice", async (req, res) => {
    try {
 
