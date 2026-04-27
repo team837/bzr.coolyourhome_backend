@@ -101,11 +101,12 @@ app.post("/create-invoice", async (req, res) => {
 
 
       const { id, price_amount } = req.body;
-
+      console.log("price");
+      console.log(price_amount)
       const response = await fetch("https://api.nowpayments.io/v1/invoice", {
          method: "POST",
          headers: {
-            "x-api-key": process.env.NowPayments_API_Key,
+            "x-api-key": "9XMXR71-ZCMMNTK-HYC1SW4-58FGBSR",
             "Content-Type": "application/json"
          },
          body: JSON.stringify({
@@ -114,8 +115,8 @@ app.post("/create-invoice", async (req, res) => {
             order_id: id,
             order_description: "Apple Macbook Pro 2019 x 1",
             ipn_callback_url: "https://nowpayments.io",
-            success_url: `${process.env.BACKEND_URL}/success?id=${id}&price=${price_amount}`, // 👈 here
-            cancel_url: `${process.env.BACKEND_URL}/cancel`
+            success_url: process.env.BACKEND_URL + "/success?id=${id}&price=${price_amount}", // 👈 here
+            cancel_url: process.env.BACKEND_URL + "/cancel"
          })
       });
 
