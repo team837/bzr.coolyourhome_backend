@@ -224,6 +224,281 @@ app.post("/create_payment", async (req, res) => {
       });
    }
 });
+
+//Last Updated 13-05-2026
+app.post("/createBtcpayInvoice", async (req, res) => {
+   try {
+      const { cart, deliveryAddress, user, rate } = req.body;
+
+      const parsedCart =
+         typeof cart === "string" ? JSON.parse(cart) : cart;
+
+      let orderAmount = 0;
+
+      parsedCart.items.forEach((item) => {
+         orderAmount +=
+            parseInt(item.price || "0", 10) *
+            (item.quantity || 1);
+      });
+
+      orderAmount = ((orderAmount / rate) * 100) / 9565;
+
+      const userId = Number(user.id);
+      const userBalance = Number(user.balance);
+      console.log("userr balance"); console.log(user.balance);
+      // userId = parseInt(user.id, 10);
+      const orderProductJson = JSON.stringify(parsedCart.items);
+      db.query(
+         "SELECT balance FROM users WHERE id = ?",
+         [userId],
+         (err, results) => {
+            if (err) {
+               return res.status(500).json({
+                  success: false,
+                  message: err.message,
+               });
+            }
+
+            if (results.length === 0) {
+               return res.status(404).json({
+                  success: false,
+                  message: "User not found",
+               });
+            }
+
+            const userBalance = parseFloat(results[0].balance);
+
+
+
+
+            const checkSql = `
+      SELECT id
+      FROM orders
+      WHERE customer_id = ?
+      LIMIT 1
+    `;
+
+            db.query(checkSql, [user.id], (err, rows) => {
+               if (err) {
+                  console.error(err);
+                  return res.status(500).json({
+                     success: false,
+                     error: err.message
+                  });
+               }
+
+               let discountApplied = false;
+
+               // If NO previous order → apply 40% discount
+               if (rows.length === 0) {
+                  console.log("actual order amount");
+                  console.log(orderAmount);
+                  orderAmount = orderAmount * 0.6;
+                  console.log("40% off"); console.log(orderAmount);
+                  if (userBalance >= orderAmount) {
+                     db.query(
+                        "UPDATE users SET  balance = balance - ? WHERE id = ?",
+                        [orderAmount, userId],
+                        (err) => {
+                           if (err) {
+                              return res.status(500).json({
+                                 success: false,
+                                 message: err.message,
+                              });
+                           }
+
+
+                           const orderProduct = JSON.stringify(parsedCart.items);
+
+                           const sql = `
+      INSERT INTO orders
+      (
+        customer_id,
+        user_email,
+        total,
+        status,
+        order_date,
+        order_product,
+
+        paid
+      )
+      VALUES (?, ?, ?, ?, ?, ?,?)
+    `;
+
+                           const values = [
+                              user.id,                         // customer_id
+                              user.email,                      // user_email
+                              orderAmount || "0",               // total
+                              "pending",                       // status
+                              new Date().toISOString(),        // order_date
+                              orderProductJson,
+                              "paid"                  // order_product JSON
+                           ];
+
+                           db.query(sql, values, (err, result) => {
+                              if (err) {
+                                 console.error("Insert error:", err);
+
+                                 return res.status(500).json({
+                                    success: false,
+                                    error: err.message
+                                 });
+                              }
+
+                              console.log("Order inserted. ID:", result.insertId);
+
+
+                           });
+
+
+
+
+                           db.query(
+                              "SELECT id, fullname, email, balance FROM users WHERE id = ?",
+                              [userId],
+                              (err, results) => {
+                                 if (err) {
+                                    return res.status(500).json({
+                                       success: false,
+                                       message: err.message,
+                                    });
+                                 }
+
+                                 return res.json({
+                                    success: true,
+                                    message: "Order placed successfully",
+                                    user: results[0],
+                                 });
+                              }
+                           );
+                        }
+                     );
+                  } else {
+                     return res.json({
+                        success: false,
+                        message: "Require more balance",
+                     });
+                  }
+
+
+                  // reduce 40%
+                  discountApplied = true;
+               }
+
+               else {
+                  if (userBalance >= orderAmount) {
+                     db.query(
+                        "UPDATE users SET  balance = balance - ? WHERE id = ?",
+                        [orderAmount, userId],
+                        (err) => {
+                           if (err) {
+                              return res.status(500).json({
+                                 success: false,
+                                 message: err.message,
+                              });
+                           }
+
+
+                           const orderProduct = JSON.stringify(parsedCart.items);
+
+
+                           const sql = `
+      INSERT INTO orders
+      (
+        customer_id,
+        user_email,
+        total,
+        status,
+        order_date,
+        order_product,
+
+        paid
+      )
+      VALUES (?, ?, ?, ?, ?, ?,?)
+    `;
+
+                           const values = [
+                              user.id,                         // customer_id
+                              user.email,                      // user_email
+                              orderAmount || "0",               // total
+                              "pending",                       // status
+                              new Date().toISOString(),        // order_date
+                              orderProductJson,
+                              "paid"                  // order_product JSON
+                           ];
+
+                           db.query(sql, values, (err, result) => {
+                              if (err) {
+                                 console.error("Insert error:", err);
+
+                                 return res.status(500).json({
+                                    success: false,
+                                    error: err.message
+                                 });
+                              }
+
+                              console.log("Order inserted. ID:", result.insertId);
+
+
+                           });
+
+
+
+
+                           db.query(
+                              "SELECT id, fullname, email, balance FROM users WHERE id = ?",
+                              [userId],
+                              (err, results) => {
+                                 if (err) {
+                                    return res.status(500).json({
+                                       success: false,
+                                       message: err.message,
+                                    });
+                                 }
+
+                                 return res.json({
+                                    success: true,
+                                    message: "Order placed successfully",
+                                    user: results[0],
+                                 });
+                              }
+                           );
+                        }
+                     );
+                  } else {
+                     return res.json({
+                        success: false,
+                        message: "Require more balance",
+                     });
+                  }
+
+
+               }
+            });
+
+
+
+
+
+
+
+
+
+
+
+
+
+         }
+      );
+
+   } catch (error) {
+      console.error("MAIN ERROR:", error);
+      return res.status(500).json({
+         success: false,
+         message: error.message,
+      });
+   }
+});
 /* ===========================
    SERVER START
 =========================== */
