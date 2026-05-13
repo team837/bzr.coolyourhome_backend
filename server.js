@@ -179,6 +179,51 @@ app.get("/success", (req, res) => {
       }
    );
 });
+
+const API_KEY = process.env.MAXELPAY_API_KEY;
+
+app.post("/create_payment", async (req, res) => {
+   try {
+      const { id, price_amount } = req.body;
+      console.log("price");
+      console.log(price_amount);
+
+
+      const paymentData = {
+         orderId: "order_123",
+         amount: price_amount,
+         currency: "USD",
+         description: "Order #123 - Premium Package",
+         successUrl: `https://bzr-coolyourhome-backend.onrender.com/success?id=${id}&price=${price_amount}`,
+         cancelUrl: "https://yoursite.com/cancel",
+         callbackUrl: "https://yoursite.com/webhook"
+      };
+
+      const response = await fetch(
+         "https://api.maxelpay.com/api/v1/payments/sessions",
+         {
+            method: "POST",
+            headers: {
+               "X-API-KEY": API_KEY,
+               "Content-Type": "application/json"
+            },
+            body: JSON.stringify(paymentData)
+         }
+      );
+
+      const data = await response.json();
+      console.log(data);
+      res.json(data);
+
+   } catch (error) {
+      console.error(error);
+
+      res.status(500).json({
+         success: false,
+         error: error.message
+      });
+   }
+});
 /* ===========================
    SERVER START
 =========================== */
