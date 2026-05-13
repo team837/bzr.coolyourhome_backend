@@ -105,7 +105,7 @@ app.post("/create-invoice", async (req, res) => {
       const response = await fetch("https://api.nowpayments.io/v1/invoice", {
          method: "POST",
          headers: {
-            "x-api-key": "9XMXR71-ZCMMNTK-HYC1SW4-58FGBSR",
+            "x-api-key": process.env.NowPayments_API_Key,
             "Content-Type": "application/json"
          },
          body: JSON.stringify({
