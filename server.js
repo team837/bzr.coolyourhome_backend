@@ -134,98 +134,14 @@ app.post("/create-invoice", async (req, res) => {
 
 
 
-app.get("/success", (req, res) => {
-   const { id, price } = req.query;
-
-   if (!id || !price) {
-      return res.status(400).json({ error: "Missing id or price" });
-   }
-
-   const userId = parseInt(id, 10);
-   const amount = parseFloat(price);
-
-   if (isNaN(userId) || isNaN(amount)) {
-      return res.status(400).json({ error: "Invalid id or price" });
-   }
-
-   db.query(
-      "UPDATE users SET balance = balance + ? WHERE id = ?",
-      [amount, userId],
-      (err) => {
-         if (err) {
-            console.error("BALANCE UPDATE ERROR:", err);
-            return res.status(500).json({ error: err.message });
-         }
-
-         // fetch updated user
-         db.query(
-            "SELECT id, fullname, email, balance FROM users WHERE id = ?",
-            [userId],
-            (err, results) => {
-               if (err) {
-                  return res.status(500).json({ error: err.message });
-               }
-
-               if (results.length === 0) {
-                  return res.status(404).json({ error: "User not found" });
-               }
-
-               res.json({
-                  message: "Balance updated successfully",
-                  user: results[0]
-               });
-            }
-         );
-      }
-   );
-});
-
-const API_KEY = process.env.MAXELPAY_API_KEY;
-
-app.post("/create_payment", async (req, res) => {
-   try {
-      const { id, price_amount } = req.body;
-      console.log("price");
-      console.log(price_amount);
 
 
-      const paymentData = {
-         orderId: "order_123",
-         amount: price_amount,
-         currency: "USD",
-         description: "Order #123 - Premium Package",
-         successUrl: `https://bzr-coolyourhome-backend.onrender.com/success?id=${id}&price=${price_amount}`,
-         cancelUrl: "https://yoursite.com/cancel",
-         callbackUrl: "https://yoursite.com/webhook"
-      };
 
-      const response = await fetch(
-         "https://api.maxelpay.com/api/v1/payments/sessions",
-         {
-            method: "POST",
-            headers: {
-               "X-API-KEY": API_KEY,
-               "Content-Type": "application/json"
-            },
-            body: JSON.stringify(paymentData)
-         }
-      );
 
-      const data = await response.json();
-      console.log(data);
-      res.json(data);
 
-   } catch (error) {
-      console.error(error);
 
-      res.status(500).json({
-         success: false,
-         error: error.message
-      });
-   }
-});
 
-//Last Updated 13-05-2026
+
 app.post("/createBtcpayInvoice", async (req, res) => {
    try {
       const { cart, deliveryAddress, user, rate } = req.body;
@@ -345,12 +261,52 @@ app.post("/createBtcpayInvoice", async (req, res) => {
                                  });
                               }
 
+
+
                               console.log("Order inserted. ID:", result.insertId);
 
 
+
+                              const orderId = results.insertId;
+                              console.log(
+                                 "Order inserted. ID:",
+                                 orderId
+                              );
+
+                              //  const orderId = result.insertId;
+
+                              db.query(
+                                 `INSERT INTO delivery 
+     (order_id, delivery_address, delivery_status)
+     VALUES (?, ?, ?)`,
+                                 [
+                                    orderId,
+                                    deliveryAddress.address || "",
+                                    "Pending",
+                                 ],
+                                 (err, deliveryResult) => {
+                                    if (err) {
+                                       console.error(
+                                          "Insert delivery error:",
+                                          err
+                                       );
+
+                                       return res.status(500).json({
+                                          success: false,
+                                          message: err.message,
+                                       });
+                                    }
+
+                                    console.log(
+                                       "Delivery inserted:",
+                                       deliveryResult.insertId
+                                    );
+
+
+
+                                 });
+
                            });
-
-
 
 
                            db.query(
@@ -440,6 +396,47 @@ app.post("/createBtcpayInvoice", async (req, res) => {
                               console.log("Order inserted. ID:", result.insertId);
 
 
+                              const orderId = results.insertId;
+                              console.log(
+                                 "Order inserted. ID:",
+                                 orderId
+                              );
+
+                              //  const orderId = result.insertId;
+
+                              db.query(
+                                 `INSERT INTO delivery 
+     (order_id, delivery_address, delivery_status)
+     VALUES (?, ?, ?)`,
+                                 [
+                                    result.insertId,
+                                    deliveryAddress.address || "",
+                                    "Pending",
+                                 ],
+                                 (err, deliveryResult) => {
+                                    if (err) {
+                                       console.error(
+                                          "Insert delivery error:",
+                                          err
+                                       );
+
+                                       return res.status(500).json({
+                                          success: false,
+                                          message: err.message,
+                                       });
+                                    }
+
+                                    console.log(
+                                       "Delivery inserted:",
+                                       deliveryResult.insertId
+                                    );
+
+
+
+                                 });
+
+
+
                            });
 
 
@@ -500,6 +497,108 @@ app.post("/createBtcpayInvoice", async (req, res) => {
    }
 });
 
+
+
+
+
+
+
+
+
+
+app.get("/success", (req, res) => {
+   const { id, price } = req.query;
+
+   if (!id || !price) {
+      return res.status(400).json({ error: "Missing id or price" });
+   }
+
+   const userId = parseInt(id, 10);
+   const amount = parseFloat(price);
+
+   if (isNaN(userId) || isNaN(amount)) {
+      return res.status(400).json({ error: "Invalid id or price" });
+   }
+
+   db.query(
+      "UPDATE users SET balance = balance + ? WHERE id = ?",
+      [amount, userId],
+      (err) => {
+         if (err) {
+            console.error("BALANCE UPDATE ERROR:", err);
+            return res.status(500).json({ error: err.message });
+         }
+
+         // fetch updated user
+         db.query(
+            "SELECT id, fullname, email, balance FROM users WHERE id = ?",
+            [userId],
+            (err, results) => {
+               if (err) {
+                  return res.status(500).json({ error: err.message });
+               }
+
+               if (results.length === 0) {
+                  return res.status(404).json({ error: "User not found" });
+               }
+
+               res.json({
+                  message: "Balance updated successfully",
+                  user: results[0]
+               });
+            }
+         );
+      }
+   );
+});
+
+const API_KEY = process.env.MAXELPAY_API_KEY;
+
+app.post("/create_payment", async (req, res) => {
+   try {
+      const { id, price_amount } = req.body;
+      console.log("price");
+      console.log(price_amount);
+
+
+      const paymentData = {
+         orderId: "order_123",
+         amount: price_amount,
+         currency: "USD",
+         description: "Order #123 - Premium Package",
+         successUrl: `https://bzr-coolyourhome-backend.onrender.com/success?id=${id}&price=${price_amount}`,
+         cancelUrl: "https://yoursite.com/cancel",
+         callbackUrl: "https://yoursite.com/webhook"
+      };
+
+      const response = await fetch(
+         "https://api.maxelpay.com/api/v1/payments/sessions",
+         {
+            method: "POST",
+            headers: {
+               "X-API-KEY": API_KEY,
+               "Content-Type": "application/json"
+            },
+            body: JSON.stringify(paymentData)
+         }
+      );
+
+      const data = await response.json();
+      console.log(data);
+      res.json(data);
+
+   } catch (error) {
+      console.error(error);
+
+      res.status(500).json({
+         success: false,
+         error: error.message
+      });
+   }
+});
+
+
+
 // 23.5.2026
 app.get("/product/:id", (req, res) => {
    const { id } = req.params;
@@ -549,6 +648,8 @@ app.get("/product/:id", (req, res) => {
    });
 });
 
+
+// Controller
 const getTrackOrders = (req, res) => {
    const { userid } = req.params;
 
@@ -557,7 +658,7 @@ const getTrackOrders = (req, res) => {
          console.error("Connection Error:", connErr);
          return res.status(500).json({
             success: false,
-            error: connErr,
+            error: connErr.message,
          });
       }
 
@@ -573,11 +674,14 @@ const getTrackOrders = (req, res) => {
         orders.paid,
         orders.recieved,
         users.fullname,
-        users.email
+        users.email,
+        delivery.delivery_date AS delivery_date
       FROM orders
       INNER JOIN users
         ON users.id = orders.customer_id
-      WHERE users.id = ?
+      LEFT JOIN delivery
+        ON orders.id = delivery.order_id
+      WHERE orders.customer_id = ?
         AND orders.recieved = 0
       ORDER BY orders.id DESC
     `;
@@ -589,9 +693,11 @@ const getTrackOrders = (req, res) => {
             console.error("Query Error:", err);
             return res.status(500).json({
                success: false,
-               error: err,
+               error: err.message,
             });
          }
+
+         console.log("TRACK RESULTS:", results);
 
          return res.json({
             success: true,
@@ -601,8 +707,103 @@ const getTrackOrders = (req, res) => {
       });
    });
 };
-// Route
+
 app.get("/track-orders/:userid", getTrackOrders);
+
+
+
+
+
+// GET all orders + delivery
+const getDeliveries = (req, res) => {
+   db.getConnection((connErr, connection) => {
+      if (connErr) {
+         console.error(connErr);
+         return res.status(500).json(connErr);
+      }
+
+      const query = `
+      SELECT
+        orders.id,
+        orders.customer_id,
+        orders.user_email,
+        orders.total,
+        orders.status,
+        orders.order_date,
+        orders.order_product,
+        orders.paid,
+        orders.recieved,
+
+        delivery.delivery_id,
+        delivery.order_id,
+        delivery.delivery_address,
+        delivery.delivery_partner,
+        delivery.tracking_number,
+        delivery.delivery_status,
+        delivery.delivery_date
+
+      FROM orders
+      INNER JOIN delivery
+      ON orders.id = delivery.order_id
+      ORDER BY orders.id DESC
+    `;
+
+      connection.query(query, (err, results) => {
+         connection.release();
+
+         if (err) {
+            console.error(err);
+            return res.status(500).json(err);
+         }
+
+         res.json({
+            success: true,
+            deliveries: results,
+         });
+      });
+   });
+};
+
+// UPDATE delivery date
+const updateDeliveryDate = (req, res) => {
+   const { delivery_id } = req.params;
+   const { delivery_date } = req.body;
+
+   db.getConnection((connErr, connection) => {
+      if (connErr) {
+         return res.status(500).json(connErr);
+      }
+
+      const query = `
+      UPDATE delivery
+      SET delivery_date = ?
+      WHERE delivery_id = ?
+    `;
+
+      connection.query(
+         query,
+         [delivery_date, delivery_id],
+         (err, result) => {
+            connection.release();
+
+            if (err) {
+               console.error(err);
+               return res.status(500).json(err);
+            }
+
+            res.json({
+               success: true,
+               message: "Delivery date updated successfully",
+            });
+         }
+      );
+   });
+};
+
+
+
+app.get("/all-deliveries", getDeliveries);
+app.put("/update-delivery-date/:delivery_id", updateDeliveryDate);
 /* ===========================
    SERVER START
 =========================== */

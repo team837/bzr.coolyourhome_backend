@@ -4,11 +4,16 @@ const { SAMPLE_ORDERS } = require("../utils/demoData");
 const ordersCache = [];
 
 const createOrder = (req, res) => {
-    const { user_email, total, customer_id, order_date, items, delivery_address } = req.body;
+    const { cart, user_email, total, customer_id, order_date, items, delivery_address } = req.body;
     const useDb = getUseDb();
 
     //console.log(items);
+    const parsedCart =
+        typeof cart === "string" ? JSON.parse(cart) : cart;
 
+    const orderProductJson = JSON.stringify(parsedCart.items);
+
+    console.log("order product json"); console.log(orderProductJson);
     //console.log(user_email);
     db.getConnection((connErr, connection) => {
         if (connErr) {
@@ -86,6 +91,25 @@ const createOrder = (req, res) => {
         });
     });
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     if (!useDb) {
         const id = ordersCache.length + 1;
         ordersCache.push({
@@ -118,8 +142,8 @@ const createOrder = (req, res) => {
             }
 
             connection.query(
-                "INSERT INTO orders (user_email,total,status,customer_id,order_date) VALUES (?,?,?,?,?)",
-                [user_email, total, "Pending", customer_id || null, order_date || new Date()],
+                "INSERT INTO orders (user_email,total,status,customer_id,order_date,order_product) VALUES (?,?,?,?,?,?)",
+                [user_email, total, "Pending", customer_id || null, order_date || new Date(), orderProductJson],
                 (err, results) => {
                     if (err) {
                         return connection.rollback(() => {
