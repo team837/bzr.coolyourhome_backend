@@ -1,6 +1,6 @@
 const { db, getUseDb } = require("../config/db");
 const { SAMPLE_ORDERS } = require("../utils/demoData");
-
+const nodemailer = require("nodemailer");
 const ordersCache = [];
 
 const createOrder = (req, res) => {
