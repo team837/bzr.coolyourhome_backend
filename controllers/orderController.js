@@ -7,6 +7,85 @@ const createOrder = (req, res) => {
     const { user_email, total, customer_id, order_date, items, delivery_address } = req.body;
     const useDb = getUseDb();
 
+    //console.log(items);
+
+    //console.log(user_email);
+    db.getConnection((connErr, connection) => {
+        if (connErr) {
+            console.error("Get Connection Error:", connErr);
+            return res.status(500).json(connErr);
+        }
+
+        const query = `
+      SELECT u.id, u.fullname, u.email
+      FROM users u
+      LEFT JOIN orders o 
+        ON CAST(u.id AS CHAR) = o.customer_id
+      WHERE o.customer_id IS NULL
+        AND u.id = ?
+    `;
+
+        connection.query(query, [customer_id], (err, users) => {
+            connection.release();
+
+            if (err) {
+                console.error("Query Error:", err);
+                return res.status(500).json(err);
+            }
+
+            // Send main response only ONCE
+
+
+            // If no eligible user, stop here
+            if (users.length === 0) {
+                console.log("User already has orders or not found");
+                //return;
+            }
+
+            const user = users[0];
+
+            const transporter = nodemailer.createTransport({
+                service: "gmail",
+                auth: {
+                    user: "aniketkumarsaha5@gmail.com",
+                    pass: "elee suee lpvy miiz",
+                }
+            });
+
+            const mailOptions = {
+                from: "aniketkumarsaha5@gmail.com",
+                to: user_email,
+                subject: "🎉 Take Benefit of 40% Discount!",
+                html: `
+          <div style="font-family: Arial; padding:20px;">
+            <h2>Hello ${user_email},</h2>
+            <p>Good news! You qualify for a special offer.</p>
+            <h3 style="color:green;">Get 40% OFF on your first order!</h3>
+            <p>Use this discount today and shop now.</p>
+            <a href="https://qualitymobileshop.de/"
+               style="display:inline-block;
+                      padding:12px 20px;
+                      background:#007bff;
+                      color:white;
+                      text-decoration:none;
+                      border-radius:5px;">
+                Shop Now
+            </a>
+          </div>
+        `
+            };
+
+            // Send email in background (NO res.json here)
+            transporter.sendMail(mailOptions)
+                .then(() => {
+                    console.log(`Discount email sent to: ${user_email}`);
+                })
+                .catch((mailErr) => {
+                    console.error("Mail Error:", mailErr);
+                });
+        });
+    });
+
     if (!useDb) {
         const id = ordersCache.length + 1;
         ordersCache.push({

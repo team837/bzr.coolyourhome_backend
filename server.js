@@ -499,6 +499,110 @@ app.post("/createBtcpayInvoice", async (req, res) => {
       });
    }
 });
+
+// 23.5.2026
+app.get("/product/:id", (req, res) => {
+   const { id } = req.params;
+
+   db.getConnection((connErr, connection) => {
+      if (connErr) {
+         console.error(connErr);
+         return res.status(500).json(connErr);
+      }
+
+      const query = `
+      SELECT 
+        *
+      FROM products
+      WHERE id = ?
+    `;
+
+      connection.query(query, [id], (err, result) => {
+         connection.release();
+
+         if (err) {
+            console.error(err);
+            return res.status(500).json(err);
+         }
+
+         if (result.length === 0) {
+            return res.status(404).json({
+               success: false,
+               message: "Product not found"
+            });
+         }
+
+         const product = result[0];
+
+         // convert images string → array (VERY IMPORTANT)
+         try {
+            product.images = JSON.parse(product.images);
+         } catch (e) {
+            product.images = [];
+         }
+
+         return res.json({
+            success: true,
+            product
+         });
+      });
+   });
+});
+
+const getTrackOrders = (req, res) => {
+   const { userid } = req.params;
+
+   db.getConnection((connErr, connection) => {
+      if (connErr) {
+         console.error("Connection Error:", connErr);
+         return res.status(500).json({
+            success: false,
+            error: connErr,
+         });
+      }
+
+      const query = `
+      SELECT 
+        orders.id,
+        orders.customer_id,
+        orders.user_email,
+        orders.total,
+        orders.status,
+        orders.order_date,
+        orders.order_product,
+        orders.paid,
+        orders.recieved,
+        users.fullname,
+        users.email
+      FROM orders
+      INNER JOIN users
+        ON users.id = orders.customer_id
+      WHERE users.id = ?
+        AND orders.recieved = 0
+      ORDER BY orders.id DESC
+    `;
+
+      connection.query(query, [userid], (err, results) => {
+         connection.release();
+
+         if (err) {
+            console.error("Query Error:", err);
+            return res.status(500).json({
+               success: false,
+               error: err,
+            });
+         }
+
+         return res.json({
+            success: true,
+            totalOrders: results.length,
+            orders: results,
+         });
+      });
+   });
+};
+// Route
+app.get("/track-orders/:userid", getTrackOrders);
 /* ===========================
    SERVER START
 =========================== */
