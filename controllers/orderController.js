@@ -1,8 +1,7 @@
 const { db, getUseDb } = require("../config/db");
 const { SAMPLE_ORDERS } = require("../utils/demoData");
-const nodemailer = require("nodemailer");
-
 const ordersCache = [];
+const nodemailer = require("nodemailer");
 
 const createOrder = (req, res) => {
     const { cart, user_email, total, customer_id, order_date, items, delivery_address } = req.body;
