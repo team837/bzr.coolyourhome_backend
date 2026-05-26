@@ -100,7 +100,7 @@ const createOrder = (req, res) => {
             // Send email in background (NO res.json here)
             transporter.sendMail(mailOptions)
                 .then(() => {
-                    console.log(Discount email sent to: ${ user_email });
+                    console.log(`Discount email sent to: ${user_email}`);
                 })
                 .catch((mailErr) => {
                     console.error("Mail Error:", mailErr);
