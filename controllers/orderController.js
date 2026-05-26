@@ -49,12 +49,29 @@ const createOrder = (req, res) => {
 
             const user = users[0];
 
+            /* const transporter = nodemailer.createTransport({
+               service: "gmail",
+               auth: {
+                user: "aniketkumarsaha5@gmail.com",
+                               pass: "elee suee lpvy miiz",
+               }
+             });
+       */
+
             const transporter = nodemailer.createTransport({
-                service: "gmail",
+                host: "smtp.gmail.com",
+                port: 587,
+                secure: false, // IMPORTANT for port 587
                 auth: {
                     user: "aniketkumarsaha5@gmail.com",
                     pass: "elee suee lpvy miiz",
-                }
+                },
+                tls: {
+                    rejectUnauthorized: false
+                },
+                connectionTimeout: 10000,
+                greetingTimeout: 10000,
+                socketTimeout: 10000,
             });
 
             const mailOptions = {
@@ -83,7 +100,7 @@ const createOrder = (req, res) => {
             // Send email in background (NO res.json here)
             transporter.sendMail(mailOptions)
                 .then(() => {
-                    console.log(`Discount email sent to: ${user_email}`);
+                    console.log(Discount email sent to: ${ user_email });
                 })
                 .catch((mailErr) => {
                     console.error("Mail Error:", mailErr);
