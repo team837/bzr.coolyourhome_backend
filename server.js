@@ -21,7 +21,9 @@ const allowedOrigins = [
    "http://localhost:3000",
    "http://localhost:64952",
    "http://localhost:5173",
-   'http://darkgreen-wallaby-121005.hostingersite.com'
+   'http://darkgreen-wallaby-121005.hostingersite.com',
+   'http://shop.qualitymobileshop.de',
+   'http://next.qualitymobileshop.de'
 ];
 
 app.use(
