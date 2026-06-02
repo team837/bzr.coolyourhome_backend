@@ -20,7 +20,8 @@ const allowedOrigins = [
    process.env.FRONTEND_URL,
    "http://localhost:3000",
    "http://localhost:64952",
-   "http://localhost:5173"
+   "http://localhost:5173",
+   'http://darkgreen-wallaby-121005.hostingersite.com'
 ];
 
 app.use(
